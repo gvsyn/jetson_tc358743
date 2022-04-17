@@ -1,0 +1,157 @@
+#include <dt-bindings/media/camera.h>
+#include <dt-bindings/platform/t210/t210.h>
+#include <dt-bindings/gpio/gpio.h>
+
+// this module appears to force the csi port to "on" regardless of the actual overlays
+// this should be broken out to a dts file for enabling via the usual means
+// and a "with audio" option, that will enable the I2S
+// oh, and allegedly pin 29 of the header (CAM_AF_EN aka gpio149) is supposedly a reset
+// in this definition. (see https://www.jetsonhacks.com/nvidia-jetson-nano-j41-header-pinout/)
+/ {
+	host1x {
+	    vi_base: vi {
+	        num-channels = <1>;  // Change 4->2
+	        ports {
+	            #address-cells = <1>;
+	            #size-cells = <0>;
+	            vi_port0: port@0 {
+	                reg = <0>;
+	                tc358743_vi_in0: endpoint {
+	                    port-index = <0>;  /* CSI-B */
+	                    bus-width = <2>; /* Use CSI-B only */
+	                    remote-endpoint = <&tc358743_csi_out0>;
+	                };
+	            };
+	        };
+	    };
+	
+	
+	    csi_base: nvcsi {
+	        num-channels = <1>;
+	        #address-cells = <1>;
+	        #size-cells = <0>;
+	
+	        csi_chan0:channel@0 {
+	            reg = <0>;
+	            ports {
+	                #address-cells = <1>;
+	                #size-cells = <0>;
+	                csi_chan0_port0: port@0 {
+	                    reg = <0>;
+	                    tc358743_csi_in0: endpoint@0 {
+	                        port-index = <0>;
+	                        bus-width = <2>;
+	                        remote-endpoint = <&tc358743_out0>;
+	                    };
+	                };
+	                csi_chan0_port1: port@1 {
+	                    reg = <1>;
+	                    tc358743_csi_out0: endpoint@1 {
+	                        remote-endpoint = <&tc358743_vi_in0>;
+	                    };
+	                };
+	            };
+	        };
+	    };
+	
+	    i2c@546c0000 {  /* I2C_PM, "adapter" 6 */
+	        #address-cells = <1>;
+	        #size-cells = <0>;
+	        tc358743_single_cam0: tc358743@0f {
+	            compatible = "toshiba,tc358743";
+	            reg = <0x0f>; /* shifted by 2 */
+	            clocks = <&tegra_car TEGRA210_CLK_CLK_OUT_3>;
+	            #clock-cells = <0>;
+	            clock-names = "clk_out_3";
+	            //mclk = "cam_mclk1";
+	            reset-gpios = <&gpio 149 0>;
+	            refclk_hz = <27000000>;  // refclk_hz -> regclk
+	
+		        interrupt-parent = <&gpio>;
+		        interrupts = <TEGRA_GPIO(E, 6) GPIO_ACTIVE_HIGH>;
+	
+	            /* Physical dimensions of sensor */
+	            physical_w = "4.713";
+	            physical_h = "3.494";
+	            /* Sensor Model */
+	            sensor_model ="tc358743";
+	            
+	   
+	
+	            ddc5v_delay = <2>;
+	            enable_hdcp = "false";
+	            lineinitcnt = <0xe80>;
+	            lptxtimecnt = <0x003>;
+	            tclk_headercnt = <0x1403>;
+	            tclk_trailcnt = <0x00>;
+	            ths_headercnt = <0x0103>;
+	            twakeup = <0x4882>;
+	            tclk_postcnt = <0x008>;
+	            ths_trailcnt = <0x02>;
+	            hstxvregcnt = <0>;
+	
+	            ports {
+	                #address-cells = <1>;
+	                #size-cells = <0>;
+	
+	                port@0 {
+	                    reg = <0>;
+	                    tc358743_out0: endpoint {
+	                        port-index = <0>; /* CSI A */
+	                        bus-width = <2>;
+	                        phy_mode = "DPHY";
+	                        data-lanes = <1 2>;
+	                        clock-lanes = <0>;
+	                        //clock-noncontinuous;
+	                        link-frequencies = /bits/ 64 <594000000>;//297000000///594000000
+	                        remote-endpoint = <&tc358743_csi_in0>;
+	                    };
+	                };
+	            };
+	        };
+	    };
+	};
+};	
+	// tc358743_clk: bridge-clk {
+	//     compatible = "fixed-clock";
+	//     //clock-cells = <0>;
+	//     clock-frequency = <24000000>;
+	// };
+/ {	
+	tcp: tegra-camera-platform {
+		compatible = "nvidia, tegra-camera-platform";
+		num_csi_lanes = <2>;  // Changed 2 -> 4
+		max_lane_speed = <1500000>;
+		min_bits_per_pixel = <16>;  
+		vi_peak_byte_per_pixel = <2>;
+		vi_bw_margin_pct = <25>;
+		max_pixel_rate = <240000>;
+		isp_peak_byte_per_pixel = <5>;
+		isp_bw_margin_pct = <25>;
+	
+	    	/**
+		* The general guideline for naming badge_info contains 3 parts, and is as follows,
+		* The first part is the camera_board_id for the module; if the module is in a FFD
+		* platform, then use the platform name for this part.
+		* The second part contains the position of the module, ex. “rear” or “front”.
+		* The third part contains the last 6 characters of a part number which is found
+		* in the module's specsheet from the vender.
+		*/
+		modules {
+		    cam_module0: module0 {
+				badge = "porg_front_tc358743";
+				position = "front";
+				orientation = "1";
+		        cam_module0_drivernode0: drivernode0 {
+		            /* Declare PCL support driver (classically known as guid)  */
+		            pcl_id = "v4l2_sensor";
+		            /* Driver's v4l2 device name */
+		            devname = "tc358743 6-000f";
+		            /* Declare the device-tree hierarchy to driver instance */
+		            proc-device-tree = "/proc/device-tree/host1x/i2c@546c0000/tc358743@0f";
+		        };
+		    };
+	        
+		};
+	};
+};
