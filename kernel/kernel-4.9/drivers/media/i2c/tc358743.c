@@ -2491,7 +2491,7 @@ static int tc358743_probe(struct i2c_client *client,
 
 	v4l2_info(sd, "%s found @ 0x%x (%s)\n", client->name,
 		  client->addr, client->adapter->name);
-	tc358743_s_edid(sd, &sd_edid);
+	//tc358743_s_edid(sd, &sd_edid);
 
 	//tc358743_g_edid(sd, &sd_edid);
 
