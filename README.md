@@ -7,7 +7,7 @@ Still sorting through the notes on this - with decent install instructions (actu
 
 ```git clone https://github.com/gvsyn/jetson_tc358743
 mkdir building && cd building
-wget  https://developer.nvidia.com/embedded/l4t/r32_release_v6.1/sources/t210/public_sources.tbz2
+wget  https://developer.nvidia.com/embedded/l4t/r32_release_v7.1/sources/t210/public_sources.tbz2
 tar -xf public_sources.tbz2  Linux_for_Tegra/source/public/kernel_src.tbz2 --strip-components=3
 tar xf kernel_src.tbz2
 cp ~/jetson_tc358743/* ./ -r
