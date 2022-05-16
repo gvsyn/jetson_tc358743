@@ -2,9 +2,6 @@
 
 Still sorting through the notes on this - with decent install instructions (actual kernel package pending, or DKMS or similar)
 
-
-`mkdir building && cd building`
-
 ```git clone https://github.com/gvsyn/jetson_tc358743
 mkdir building && cd building
 wget  https://developer.nvidia.com/embedded/l4t/r32_release_v7.1/sources/t210/public_sources.tbz2
@@ -30,6 +27,9 @@ sudo vim extlinux/extlinux.conf
 
 sudo /opt/nvidia/jetson-io/config-by-function.py -o dtbo i2s4
 ```
+
+`sudo vim /boot/extlinux/extlinux.conf`
+
 ### amend the following:
      LINUX /boot/Image
 ### to
