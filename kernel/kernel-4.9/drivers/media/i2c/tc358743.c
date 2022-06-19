@@ -77,19 +77,6 @@ static const struct camera_common_frmfmt tc358743_frmfmt[] = {
 	{{1920, 1080}, tc358743_30_60fps, 3, 0, tc358743_MODE_1920X1080},
 };
 
-// static const struct camera_common_colorfmt tc358743_color_fmts[] = {
-// 	{
-// 		MEDIA_BUS_FMT_SRGGB12_1X12,
-// 		V4L2_COLORSPACE_SRGB,
-// 		V4L2_PIX_FMT_SRGGB12,
-// 	},
-// 	{
-// 		MEDIA_BUS_FMT_UYVY8_1X16,
-// 		V4L2_COLORSPACE_SRGB,
-// 		V4L2_PIX_FMT_UYVY,
-// 	},
-// };
-
 #define EDID_NUM_BLOCKS_MAX 8
 #define EDID_BLOCK_SIZE 128
 
