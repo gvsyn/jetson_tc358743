@@ -1829,75 +1829,22 @@ static int tc358743_s_edid(struct v4l2_subdev *sd,
 	return 0;
 }
 
-// static int tc358743_mbus_fmt(struct v4l2_subdev *sd, struct v4l2_mbus_framefmt *mf)
-// {
-// 	struct tc358743_state *state = to_state(sd);
-// 	u8 vi_rep = i2c_rd8(sd, VI_REP);
-
-// 	mf->code = state->mbus_fmt_code;
-// 	mf->width = state->timings.bt.width;
-// 	mf->height = state->timings.bt.height;
-// 	mf->field = V4L2_FIELD_NONE;
-// 	switch (vi_rep & MASK_VOUT_COLOR_SEL) {
-// 		case MASK_VOUT_COLOR_RGB_FULL:
-// 		case MASK_VOUT_COLOR_RGB_LIMITED:
-// 			mf->colorspace = V4L2_COLORSPACE_SRGB;
-// 			break;
-// 		case MASK_VOUT_COLOR_601_YCBCR_LIMITED:
-// 		case MASK_VOUT_COLOR_601_YCBCR_FULL:
-// 			mf->colorspace = V4L2_COLORSPACE_SMPTE170M;
-// 			break;
-// 		case MASK_VOUT_COLOR_709_YCBCR_FULL:
-// 		case MASK_VOUT_COLOR_709_YCBCR_LIMITED:
-// 			mf->colorspace = V4L2_COLORSPACE_REC709;
-// 			break;
-// 		default:
-// 			mf->colorspace = 0;
-// 			break;
-// 	}
-// 	return 0;
-// }
-
 static int tc358743_enum_mbus_code(struct v4l2_subdev *sd,
 				                   struct v4l2_subdev_pad_config  *cfg,
 				                   struct v4l2_subdev_mbus_code_enum *code)
 {
 	v4l2_info(sd, "%s()\n", __func__);
 
-	// if (code->index >= 2) {
-	// 	v4l2_err(sd, "Error in %s\n", __FUNCTION__);
-	// 	v4l2_err(sd, "print code-> %d\n",code->index);///!!!!add code
-	// 	return -EINVAL;
-	// }
-
-	// switch (code->index) {
-	// 	case 0:
-	// 		code->code = MEDIA_BUS_FMT_RGB888_1X24;
-			
-	// 		break;
-	// 	case 1:
-			
-	// 		code->code = MEDIA_BUS_FMT_UYVY8_1X16;
-	// 		break;
-	// 	default:
-	// 		return -EINVAL;
-	// }
-
-    {
 	switch (code->index) {
-	case 0:
-		code->code = MEDIA_BUS_FMT_RGB888_1X24;
-		break;
-	case 1:
-		code->code = MEDIA_BUS_FMT_UYVY8_1X16;
-		break;
-	default:
-		return -EINVAL;
+		case 0:
+			code->code = MEDIA_BUS_FMT_RGB888_1X24;
+			break;
+		case 1:
+			code->code = MEDIA_BUS_FMT_UYVY8_1X16;
+			break;
+		default:
+			return -EINVAL;
 	}
-	return 0;
-}
-	v4l2_info(sd, "Mbus code found succsefully (%d: %d)", code->index, code->code);
-	
 	return 0;
 }
 
@@ -1911,9 +1858,6 @@ static int tc358743_enum_frame_size(struct v4l2_subdev *sd,
 	v4l2_info(sd, "%s()\n", __func__);
 	v4l2_info(sd, "fse->code %d, index %d\n", fse->code, fse->index);
 	v4l2_info(sd, "----------------------------------------\n");
-
-	// fse->min_width  = fse->max_width  = 1280;
-	// fse->min_height = fse->max_height = 720;
 
 	v4l2_info(sd, "Trying to find frmfmt that matches fse->code, code: %d (UYVY: %d, ARGB32: %d, MEDIA_BUS_FMT_UYVY8_1X16: %d, MEDIA_BUS_FMT_RGB888_1X24: %d)\n", fse->code, V4L2_PIX_FMT_UYVY, V4L2_PIX_FMT_ARGB32, MEDIA_BUS_FMT_UYVY8_1X16, MEDIA_BUS_FMT_RGB888_1X24);
 
@@ -2007,7 +1951,6 @@ static const struct v4l2_subdev_video_ops tc358743_video_ops = {
 	.g_input_status = tc358743_g_input_status,
 	.s_dv_timings = tc358743_s_dv_timings,
 	.g_dv_timings = tc358743_g_dv_timings,
-	//.mbus_fmt	= tc358743_mbus_fmt,
 	.g_mbus_config = tc358743_g_mbus_config,
 	.query_dv_timings = tc358743_query_dv_timings,
 	.s_stream = tc358743_s_stream,
@@ -2170,18 +2113,15 @@ static int tc358743_probe_of(struct tc358743_state *state)
 	 * It must be between 6 MHz and 40 MHz, lower frequency is better.
 	 */
 	switch (state->pdata.refclk_hz) {
-    //~ case 26322581:
-        //~ state->pdata.refclk_hz = 26322581;
-	case 26000000:
-	case 27000000:
-	//~ case 40800000: /* Tegra */
-	case 42000000:
-		state->pdata.pll_prd = state->pdata.refclk_hz / 6000000;
-		break;
-	default:
-		dev_err(dev, "unsupported refclk rate: %u Hz\n",
-			state->pdata.refclk_hz);
-		goto disable_clk;
+		case 26000000:
+		case 27000000:
+		case 42000000:
+			state->pdata.pll_prd = state->pdata.refclk_hz / 6000000;
+			break;
+		default:
+			dev_err(dev, "unsupported refclk rate: %u Hz\n",
+				state->pdata.refclk_hz);
+			goto disable_clk;
 	}
 
 	/*
@@ -2220,26 +2160,6 @@ static int tc358743_probe_of(struct tc358743_state *state)
 	state->pdata.tclk_postcnt = 0x008;
 	state->pdata.ths_trailcnt = 0x2;
 	state->pdata.hstxvregcnt = 2;//!!!2
-	
-/*richard you*/	
-// 	state->pdata.pll_fbd        = 144;//144
-
-// 	// timing setting
-// //case 972000000U:
-// 	state->pdata.lineinitcnt = 0xFA0;
-// 	state->pdata.lptxtimecnt = 0x007;
-// 		/* tclk-preparecnt: 6, tclk-zerocnt: 40 */
-// 	state->pdata.tclk_headercnt = 0x2806;
-// 	state->pdata.tclk_trailcnt = 0x00;
-// 		/* ths-preparecnt: 3, ths-zerocnt: 1 */
-// 	state->pdata.ths_headercnt = 0x0806;
-// 	state->pdata.twakeup = 0x4268;
-// 	state->pdata.tclk_postcnt = 0x008;
-// 	state->pdata.ths_trailcnt = 0x5;
-// 	state->pdata.hstxvregcnt = 0;
-// 	to see if below is fucking things up given it *should*
-// 	be calculated based on actual info
-		//state->pdata.pll_fbd        = 176;//144
 
 	// timing setting
 //case 972000000U:
