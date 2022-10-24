@@ -1825,13 +1825,6 @@ static int tc358743_s_edid(struct v4l2_subdev *sd,
 	if (tx_5v_power_present(sd))
 		tc358743_enable_edid(sd);
 
-	v4l2_info(sd, "%s but about to gv_audio_hack", __FUNCTION__);
-	usleep_range(5000, 10000);
-	tc358743_force_audio_hack(sd);
-	tc358743_set_pll(sd);
-//	usleep_range(5000, 10000);
-//	v4l2_info(sd, "%s but about to (maybe) run set_hdmi_audio", __FUNCTION__);
-//	tc358743_set_hdmi_audio(sd);
 	v4l2_info(sd, "%s completed successfully", __FUNCTION__);
 	return 0;
 }
