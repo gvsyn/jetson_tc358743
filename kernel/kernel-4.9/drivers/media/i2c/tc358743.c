@@ -862,15 +862,6 @@ static void tc358743_set_csi_color_space(struct v4l2_subdev *sd)
 			i2c_wr16_and_or(sd, CONFCTL, ~MASK_YCBCRFMT,
 					MASK_YCBCRFMT_422_8_BIT);
 			break;
-		// case MEDIA_BUS_FMT_RGB888_1X24:
-		// 	v4l2_info(sd, "%s: RGB 888 24-bit\n", __func__);
-		// 	i2c_wr8_and_or(sd, VOUT_SET2,
-		// 			~(MASK_SEL422 | MASK_VOUT_422FIL_100) & 0xff,
-		// 			0x00);
-		// 	i2c_wr8_and_or(sd, VI_REP, ~MASK_VOUT_COLOR_SEL & 0xff,
-		// 			MASK_VOUT_COLOR_RGB_FULL);
-		// 	i2c_wr16_and_or(sd, CONFCTL, ~MASK_YCBCRFMT, 0);
-		// 	break;
 		default:
 			v4l2_dbg(2, debug, sd, "%s: Unsupported format code 0x%x\n",
 				__func__, state->mbus_fmt_code);
@@ -2148,19 +2139,6 @@ static int tc358743_probe_of(struct tc358743_state *state)
 	pr_info("tc358743 state->pdata.pll_prd=%d\r\n",state->pdata.pll_prd);
 	pr_info("tc358743 state->pdata.pll_fbd=%d\r\n",state->pdata.pll_fbd);
 
-	// freq = refclk / prd * fbd, default = 594 MHz
-	state->pdata.lineinitcnt = 0xe80;
-	state->pdata.lptxtimecnt = 0x003;
-	/* tclk-preparecnt: 3, tclk-zerocnt: 20 */
-	state->pdata.tclk_headercnt = 0x1403;
-	state->pdata.tclk_trailcnt = 0x00;
-	/* ths-preparecnt: 3, ths-zerocnt: 1 */
-	state->pdata.ths_headercnt = 0x0103;
-	state->pdata.twakeup = 0x4882;
-	state->pdata.tclk_postcnt = 0x008;
-	state->pdata.ths_trailcnt = 0x2;
-	state->pdata.hstxvregcnt = 2;//!!!2
-
 	// timing setting
 //case 972000000U:
 	state->pdata.lineinitcnt = 0x1d01;//
@@ -2174,8 +2152,6 @@ static int tc358743_probe_of(struct tc358743_state *state)
 	state->pdata.tclk_postcnt = 0x010;//
 	state->pdata.ths_trailcnt = 0xA;//
 	state->pdata.hstxvregcnt = 5;//5
-
-
 	
 	//~ state->reset_gpio = devm_gpiod_get_optional(dev, "reset",
 						    //~ GPIOD_OUT_LOW);
@@ -2232,10 +2208,10 @@ static int tc358743_probe(struct i2c_client *client,
         // V4L2_DV_BT_CEA_1920X1080P50;
         V4L2_DV_BT_CEA_1920X1080P60;
 	// set edid
-//    struct v4l2_subdev_edid sd_edid = {
-//		.blocks = 2,
-//		.edid = edid,
-//	};
+	struct v4l2_subdev_edid sd_edid = {
+		.blocks = 2,
+		.edid = edid,
+	};
 	struct tc358743_state *state;
 	struct tc358743_platform_data *pdata = client->dev.platform_data;
 	struct v4l2_subdev *sd;
@@ -2391,9 +2367,9 @@ static int tc358743_probe(struct i2c_client *client,
 
 	v4l2_info(sd, "%s found @ 0x%x (%s)\n", client->name,
 		  client->addr, client->adapter->name);
-	//tc358743_s_edid(sd, &sd_edid);
+	tc358743_s_edid(sd, &sd_edid);
 
-	//tc358743_g_edid(sd, &sd_edid);
+	tc358743_g_edid(sd, &sd_edid);
 
 	tc358743_log_status(sd);
 	v4l2_info(sd,"Probe complete\n");
