@@ -618,10 +618,10 @@ static int tc358743_get_edid(struct v4l2_subdev *sd){
 	u32 n = sizeof(edid_read);
 
 	result = i2c_rd(sd,EDID_RAM,edid_read,n);
-	v4l2_info(sd, "%s i2c_rd return %d\r\n",__func__,result);
+	v4l2_info(sd, "%s i2c_rd return %d\n",__func__,result);
 	// for(i = 0; i< n;i++)
 	// 	printk("%02x ",edid_read[i]);
-	v4l2_info(sd, "%s done\r\n",__func__);
+	v4l2_info(sd, "%s done\n",__func__);
 	return 0;
 }
 static int tc358743_log_status(struct v4l2_subdev *sd)
@@ -965,16 +965,6 @@ static void tc358743_set_hdmi_phy(struct v4l2_subdev *sd)
 	// turn on physics
 	i2c_wr8_and_or(sd, PHY_EN, ~MASK_ENABLE_PHY, MASK_ENABLE_PHY);
 }
-
-static void tc358743_force_audio_hack(struct v4l2_subdev *sd)
-{
-	
-	v4l2_info(sd, "%s IN PROGRESS", __FUNCTION__);
-	// DVI->HDMI change
-	i2c_wr8(sd, ANA_CTL, MASK_APPL_PCSX_NORMAL | MASK_ANALOG_ON);
-
-}
-
 
 static void tc358743_set_hdmi_audio(struct v4l2_subdev *sd)
 {
@@ -1764,7 +1754,7 @@ static int tc358743_g_edid(struct v4l2_subdev *sd,
 
 	i2c_rd(sd, EDID_RAM + (edid->start_block * EDID_BLOCK_SIZE), edid->edid,
 			edid->blocks * EDID_BLOCK_SIZE);
-	v4l2_info(sd,"EDID_RAM has %d byte from: 0x%04x to 0x%04x \r\n",
+	v4l2_info(sd,"EDID_RAM has %d byte from: 0x%04x to 0x%04x \n",
 		edid->blocks * EDID_BLOCK_SIZE,
 		EDID_RAM + (edid->start_block * EDID_BLOCK_SIZE),
 		EDID_RAM + (edid->start_block * EDID_BLOCK_SIZE) + 
@@ -1772,7 +1762,7 @@ static int tc358743_g_edid(struct v4l2_subdev *sd,
 	// for(i=0;i<edid->blocks * EDID_BLOCK_SIZE;i++){
 	// 	printk("%02x ",edid->edid[i]);
 	// }
-	// v4l2_info(sd,"\r\n");
+	// v4l2_info(sd,"\n");
 	v4l2_info(sd, "%s completed successfully", __FUNCTION__);
 	return 0;
 }
@@ -2136,8 +2126,8 @@ static int tc358743_probe_of(struct tc358743_state *state)
 	 */
 	if (bps_pr_lane != 594000000U)
 		dev_warn(dev, "untested bps per lane: %u bps\n", bps_pr_lane);
-	pr_info("tc358743 state->pdata.pll_prd=%d\r\n",state->pdata.pll_prd);
-	pr_info("tc358743 state->pdata.pll_fbd=%d\r\n",state->pdata.pll_fbd);
+	pr_info("tc358743 state->pdata.pll_prd=%d\n",state->pdata.pll_prd);
+	pr_info("tc358743 state->pdata.pll_fbd=%d\n",state->pdata.pll_fbd);
 
 	// timing setting
 //case 972000000U:
