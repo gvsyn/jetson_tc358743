@@ -1073,6 +1073,7 @@ static void tc358743_format_change(struct v4l2_subdev *sd)
 static void tc358743_init_interrupts(struct v4l2_subdev *sd)
 {
 	u16 i;
+	v4l2_info(sd, "%s: INIT INTERRUPTS", __func__);
 
 	/* clear interrupt status registers */
 	for (i = SYS_INT; i <= KEY_INT; i++)
@@ -1137,7 +1138,7 @@ static void tc358743_hdmi_misc_int_handler(struct v4l2_subdev *sd,
 
 	i2c_wr8(sd, MISC_INT, misc_int);
 
-	v4l2_info(sd, "%s: MISC_INT =0x%02x\n", __func__, misc_int);
+	v4l2_info(sd, "%s: MISC_INT = 0x%02x\n", __func__, misc_int);
 
 	if (misc_int & MASK_I_SYNC_CHG) {
 		/* Reset the HDMI PHY to try to trigger proper lock on the
@@ -1169,7 +1170,7 @@ static void tc358743_hdmi_cbit_int_handler(struct v4l2_subdev *sd,
 
 	i2c_wr8(sd, CBIT_INT, cbit_int);
 
-	v4l2_info(sd, "%s: CBIT_INT =0x%02x\n", __func__, cbit_int);
+	v4l2_info(sd, "%s: CBIT_INT = 0x%02x\n", __func__, cbit_int);
 
 	if (cbit_int & MASK_I_CBIT_FS) {
 
@@ -1207,7 +1208,7 @@ static void tc358743_hdmi_clk_int_handler(struct v4l2_subdev *sd, bool *handled)
 	/* Bit 7 and bit 6 are set even when they are masked */
 	i2c_wr8(sd, CLK_INT, clk_int | 0x80 | MASK_I_OUT_H_CHG);
 
-	v4l2_info(sd, "%s: CLK_INT =0x%02x\n", __func__, clk_int);
+	v4l2_info(sd, "%s: CLK_INT = 0x%02x\n", __func__, clk_int);
 
 	if (clk_int & (MASK_I_IN_DE_CHG)) {
 
@@ -1242,7 +1243,7 @@ static void tc358743_hdmi_sys_int_handler(struct v4l2_subdev *sd, bool *handled)
 
 	i2c_wr8(sd, SYS_INT, sys_int);
 
-	v4l2_info(sd, "%s: SYS_INT =0x%02x\n", __func__, sys_int);
+	v4l2_info(sd, "%s: SYS_INT = 0x%02x\n", __func__, sys_int);
 
 	if (sys_int & MASK_I_DDC) {
 		bool tx_5v = tx_5v_power_present(sd);
@@ -1252,11 +1253,9 @@ static void tc358743_hdmi_sys_int_handler(struct v4l2_subdev *sd, bool *handled)
 		v4l2_info(sd, "%s: Tx 5V power present: %s\n",
 						__func__, tx_5v ?  "yes" : "no");
 
-		if (tx_5v) {
-			tc358743_enable_edid(sd);
-		} else {
+		if (!tx_5v) {
 			tc358743_enable_interrupts(sd, false);
-			tc358743_disable_edid(sd);
+			//tc358743_disable_edid(sd);
 			memset(&state->timings, 0, sizeof(state->timings));
 			tc358743_erase_bksv(sd);
 			tc358743_update_controls(sd);
@@ -1384,8 +1383,12 @@ static int tc358743_isr(struct v4l2_subdev *sd, u32 status, bool *handled)
 {
 	u16 intstatus = i2c_rd16(sd, INTSTATUS);
 	unsigned retry = 10;
+	
+	v4l2_info(sd, "%s: IntStatus = 0x%04x\n", __func__, intstatus);
 
-	v4l2_info(sd, "%s: IntStatus =0x%04x\n", __func__, intstatus);
+	// interrupt bypass
+	return 0;
+
 
 	usleep_range(500, 1000);
 	if (intstatus & MASK_HDMI_INT) {
@@ -1437,6 +1440,7 @@ retry:
 	if (intstatus & MASK_CSI_INT) {
 		u32 csi_int = i2c_rd32(sd, CSI_INT);
 
+		v4l2_dbg(1, debug, sd, "%s: CSI Interrupt....", __func__);
 		if (csi_int & MASK_INTER)
 			tc358743_csi_err_int_handler(sd, handled);
 
@@ -1767,6 +1771,15 @@ static int tc358743_g_edid(struct v4l2_subdev *sd,
 	return 0;
 }
 
+static void tc358743_force_audio_hack(struct v4l2_subdev *sd)
+{
+	
+	v4l2_info(sd, "%s IN PROGRESS", __FUNCTION__);
+	// DVI->HDMI change
+	i2c_wr8(sd, ANA_CTL, MASK_APPL_PCSX_NORMAL | MASK_ANALOG_ON);
+
+}
+
 static int tc358743_s_edid(struct v4l2_subdev *sd,
 				           struct v4l2_subdev_edid *edid)
 {
@@ -1806,6 +1819,10 @@ static int tc358743_s_edid(struct v4l2_subdev *sd,
 	if (tx_5v_power_present(sd))
 		tc358743_enable_edid(sd);
 
+//	v4l2_info(sd, "%s but about to gv_audio_hack", __FUNCTION__);
+	usleep_range(5000, 10000);
+	tc358743_force_audio_hack(sd);
+	tc358743_set_pll(sd);
 	v4l2_info(sd, "%s completed successfully", __FUNCTION__);
 	return 0;
 }
@@ -2068,22 +2085,6 @@ static int tc358743_probe_of(struct tc358743_state *state)
     pr_info("tc358743 endpoint->nr_of_link_frequencies %d\n",
     	endpoint->nr_of_link_frequencies);
 
-	// state->bus = endpoint->bus.mipi_csi2;
-    // pr_info("tc358743 state->bus %s\n",state->bus);
-	// clk_prepare_enable(refclk);
-
-	// state->pdata.refclk_hz = clk_get_rate(refclk);
-    // if ((state->pdata.refclk_hz != 26000000) ||
-    //     (state->pdata.refclk_hz != 27000000) ||
-    //     (state->pdata.refclk_hz != 42000000))
-    // {
-    //     pr_info("Set new clock\n");
-    //     if (0 != clk_set_rate(refclk,27000000))
-    //     {
-    //         pr_info("Error: Set new clock\n");
-    //     }
-    // }
-
 	state->pdata.ddc5v_delay = DDC5V_DELAY_100_MS;
 	state->pdata.hdmi_detection_delay = HDMI_MODE_DELAY_100_MS;
 	state->pdata.enable_hdcp = false;
@@ -2198,10 +2199,10 @@ static int tc358743_probe(struct i2c_client *client,
         // V4L2_DV_BT_CEA_1920X1080P50;
         V4L2_DV_BT_CEA_1920X1080P60;
 	// set edid
-	struct v4l2_subdev_edid sd_edid = {
-		.blocks = 2,
-		.edid = edid,
-	};
+	//struct v4l2_subdev_edid sd_edid = {
+	//	.blocks = 2,
+	//	.edid = edid,
+	//};
 	struct tc358743_state *state;
 	struct tc358743_platform_data *pdata = client->dev.platform_data;
 	struct v4l2_subdev *sd;
@@ -2357,9 +2358,9 @@ static int tc358743_probe(struct i2c_client *client,
 
 	v4l2_info(sd, "%s found @ 0x%x (%s)\n", client->name,
 		  client->addr, client->adapter->name);
-	tc358743_s_edid(sd, &sd_edid);
+	//tc358743_s_edid(sd, &sd_edid);
 
-	tc358743_g_edid(sd, &sd_edid);
+	//tc358743_g_edid(sd, &sd_edid);
 
 	tc358743_log_status(sd);
 	v4l2_info(sd,"Probe complete\n");

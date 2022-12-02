@@ -159,11 +159,11 @@
 	            #clock-cells = <0>;
 	            clock-names = "extperiph1";
 	            //mclk = "cam_mclk1";
-	            reset-gpios = <&gpio 200 0>;
+	            reset-gpios = <&gpio 149 0>;
 	            refclk_hz = <27000000>;  // refclk_hz -> regclk
 	
-		        //interrupt-parent = <&gpio>;
-		        //interrupts = <TEGRA_GPIO(T, 0) GPIO_ACTIVE_HIGH>;
+                interrupt-parent = <&gpio>;
+                interrupts = <TEGRA_GPIO(E, 6) GPIO_ACTIVE_HIGH>;
 	
 	            /* Physical dimensions of sensor */
 	            physical_w = "4.713";
