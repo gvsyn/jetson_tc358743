@@ -2,6 +2,8 @@
 #include <dt-bindings/platform/t210/t210.h>
 #include <dt-bindings/gpio/gpio.h>
 
+#define CAM_RESET TEGRA_GPIO(Z, 0) 
+
 // this module appears to force the csi port to "on" regardless of the actual overlays
 // this should be broken out to a dts file for enabling via the usual means
 // and a "with audio" option, that will enable the I2S
@@ -108,7 +110,18 @@
 	            };
 	        };
 	    };
+
 	};
+
+	gpio@6000d000 {
+		camera-control-output-high {	
+			gpio-hog;
+			output-high;
+			gpios = < CAM_RESET 0>;
+			label = "cam0-rst";
+		};
+	};
+
 };	
 	// tc358743_clk: bridge-clk {
 	//     compatible = "fixed-clock";
