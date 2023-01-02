@@ -5,8 +5,6 @@
 // this module appears to force the csi port to "on" regardless of the actual overlays
 // this should be broken out to a dts file for enabling via the usual means
 // and a "with audio" option, that will enable the I2S
-// oh, and allegedly pin 29 of the header (CAM_AF_EN aka gpio149) is supposedly a reset
-// in this definition. (see https://www.jetsonhacks.com/nvidia-jetson-nano-j41-header-pinout/)
 / {
 	host1x {
 	    vi_base: vi {
@@ -64,7 +62,7 @@
 	            #clock-cells = <0>;
 	            clock-names = "clk_out_3";
 	            //mclk = "cam_mclk1";
-	            reset-gpios = <&gpio 149 0>;
+	            reset-gpios = <&gpio 200 1>;
 	            refclk_hz = <27000000>;  // refclk_hz -> regclk
 	
 		        interrupt-parent = <&gpio>;
